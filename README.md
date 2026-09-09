@@ -1,6 +1,6 @@
 # 🧅 Parat — work-minimizing layers
 
-**1000 requests → 10 compute. 1500 jobs → 250 compute.** Server ko kaam kam karo — load khud sahi ho jata hai.
+**1000 requests → 10 compute. 10,000 items ka bada kaam → 100 tukde → parallel → smooth.** Server ka kaam kam karo — load khud sahi.
 
 > *parat* (परत) = layer. Har layer ka ek hi kaam: **neeche tak pahunchne wala kaam kam karna.**
 
@@ -72,6 +72,35 @@ console.log(agent.report(out));
 - 1500 jobs (3 skills, 30x duplicates) → **250 compute, 83% bacha, cap respected** ✅
 - 3000 jobs → **100 compute, 97% bacha** ✅
 - 1 skill crash → sirf wahi fail, baaki jobs zinda (isolated) ✅
+
+## 🧩 Chunk engine — bada kaam, chhote tukde (OS ka dil)
+
+10,000 items ka kaam ek server pe mat daalo — tukdon mein todo, parallel chalao, jod do:
+
+```js
+const { ChunkEngine } = require('parat/src/chunk.js');
+const eng = new ChunkEngine({ chunkSize: 100, concurrency: 5, retries: 2 });
+
+const out = await eng.run(hugeArray, async (chunk) => {
+  // har tukda CHHOTA hai — free tier ke RAM limit ke andar
+  return chunk.map(processOneItem);
+}, {
+  keyFn: (chunk, i) => 'job-' + i,  // same tukda dobara = cache se FREE
+  cacheTtl: 3600_000,
+  onProgress: (p) => console.log(p.chunksDone + '/' + p.chunksTotal),
+});
+
+// out.results — saare 10k, ORDER MEIN
+// out.failedChunks — sirf jo fail hue (retry ke baad bhi) — baqi zinda
+// out.stats — { chunks: 100, peakConcurrency: 5, wallMs }
+```
+
+**Proof (test-chunk.js — 20/20):**
+- 10,000 items → 100 chunks, cap 5 → **280ms (sequential ~500ms)** ✅
+- Ek tukda hamesha-fail → **sirf woh fail, 99 zinda** (isolated) ✅
+- Retry: girne wala tukda dobara chala → **pass ho gaya** ✅
+- Same kaam dobara → **0ms, zero compute** (chunk cache) ✅
+- Random delay ke bawajood **order sahi** ✅
 
 ## Layers
 
