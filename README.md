@@ -1,6 +1,6 @@
 # 🧅 Parat — work-minimizing layers
 
-**1000 requests → 10 compute.** Server ko kaam kam karo — load khud sahi ho jata hai.
+**1000 requests → 10 compute. 1500 jobs → 250 compute.** Server ko kaam kam karo — load khud sahi ho jata hai.
 
 > *parat* (परत) = layer. Har layer ka ek hi kaam: **neeche tak pahunchne wala kaam kam karna.**
 
@@ -50,6 +50,28 @@ console.log(p.stats());  // kitna kaam bacha — live proof
 parat demo    # 1000 requests → 10 compute LIVE proof
 parat stats   # chhota demo + scorecard
 ```
+
+## 🤖 Agent mode — ek saath 1000+ kaam
+
+```js
+const { Agent } = require('parat');
+const agent = new Agent({ name: 'bulk-worker' });
+
+agent.skill('fetch-page', async (url) => fetch(url).then(r => r.text()));
+agent.skill('transform', async (d) => transform(d), { batch: { maxSize: 10, windowMs: 50 } });
+
+// 1500 jobs EK SAATH — duplicates ho to bhi tension nahi
+const jobs = urls.map(u => ({ task: 'fetch-page', input: u }));
+const out = await agent.run(jobs);
+console.log(agent.report(out));
+// 🤖 bulk-worker — 1500 jobs ek saath
+//    asli compute: 250 (sirf unique kaam) | kaam bacha: 83%
+```
+
+**Proof (test-agent.js — 17/17):**
+- 1500 jobs (3 skills, 30x duplicates) → **250 compute, 83% bacha, cap respected** ✅
+- 3000 jobs → **100 compute, 97% bacha** ✅
+- 1 skill crash → sirf wahi fail, baaki jobs zinda (isolated) ✅
 
 ## Layers
 
