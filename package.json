@@ -1,0 +1,12 @@
+{
+  "name": "parat",
+  "version": "1.0.0",
+  "description": "Parat (परत) — work-minimizing layer system: 1000 requests → 10 compute. Cache + dedup + batch + queue layers jo server ka kaam KAM karte hain.",
+  "main": "src/parat.js",
+  "bin": { "parat": "bin/parat.js" },
+  "scripts": { "test": "node test-parat.js", "demo": "node bin/parat.js demo" },
+  "keywords": ["layers", "cache", "dedup", "batch", "queue", "load", "serverless", "edge"],
+  "author": "ayanshaikh2491-stack",
+  "license": "MIT",
+  "engines": { "node": ">=16" }
+}
